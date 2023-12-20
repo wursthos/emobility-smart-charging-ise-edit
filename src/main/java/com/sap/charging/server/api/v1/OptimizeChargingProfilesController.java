@@ -1,25 +1,19 @@
 package com.sap.charging.server.api.v1;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.sap.charging.realTime.State;
 import com.sap.charging.realTime.StrategyAlgorithmic;
-import com.sap.charging.realTime.model.forecasting.departure.CarDepartureForecast;
+import com.sap.charging.realTime.model.forecasting.departure.CarDepartureOracle;
 import com.sap.charging.server.api.v1.store.OptimizerSettings;
 import com.sap.charging.sim.Simulation;
 import com.sap.charging.sim.event.Event;
 import com.sap.charging.util.Loggable;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Api(value = "emobility-smart-charging REST API")
@@ -31,13 +25,13 @@ public class OptimizeChargingProfilesController implements Loggable {
     }
 
     public StrategyAlgorithmic buildStrategy(OptimizerSettings settings) {
-        StrategyAlgorithmic strategy = new StrategyAlgorithmic(CarDepartureForecast.getDefaultCarDepartureForecast());
+        StrategyAlgorithmic strategy = new StrategyAlgorithmic(new CarDepartureOracle());
         strategy.objectiveFairShare.setWeight(settings.getWeightObjectiveFairShare());
         strategy.objectiveEnergyCosts.setWeight(settings.getWeightObjectiveEnergyCosts());
         strategy.objectivePeakShaving.setWeight(settings.getWeightObjectivePeakShaving());
         strategy.objectiveLoadImbalance.setWeight(settings.getWeightObjectiveLoadImbalance());
-        strategy.setReoptimizeOnStillAvailableAfterExpectedDepartureTimeslot(true);
-        strategy.setRescheduleCarsWith0A(false);
+        strategy.setReoptimizeOnStillAvailableAfterExpectedDepartureTimeslot(false);
+        // strategy.setRescheduleCarsWith0A(true);
         return strategy;
     }
 

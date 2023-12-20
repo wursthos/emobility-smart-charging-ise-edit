@@ -614,8 +614,14 @@ public class StrategyAlgorithmic extends Strategy {
 			sortingCriteria = getSortingCriteriaByObjective();
 		}
 		
-		// Reschedule from now until end of day
-		List<SortableElement<Integer>> sortedTimeslots = TimeslotSorter.getSortedTimeslots(state, state.currentTimeslot, 96, sortingCriteria, blockedTimeslots); 
+		// Reschedule from now until car departure
+		List<SortableElement<Integer>> sortedTimeslots = TimeslotSorter.getSortedTimeslots(
+			state,
+			state.currentTimeslot,
+			TimeUtil.getTimeslotFromSeconds(car.getTimestampDeparture()) + 1,
+			sortingCriteria,
+			blockedTimeslots
+		);
 		double[] planToChange = carAssignment.car.getCurrentPlan();
 		double capacityWithPlan = scheduler.getPlannedCapacity(chargingStation, car, state.currentTimeSeconds);
 		double originalPlannedCurrent = planToChange[violatingK];
@@ -791,9 +797,10 @@ public class StrategyAlgorithmic extends Strategy {
 			}
 			
 			// Always reoptimize
-			if (car.isFullyCharged() == false) {
-				scheduler.fillChargingPlanToMinSoC(state, currentK, state.energyPriceHistory.getNTimeslots(), car, chargingStation, state.currentTimeSeconds);
-				scheduler.fillChargingPlanByCost(state, currentK, state.energyPriceHistory.getNTimeslots(), car, chargingStation, state.currentTimeSeconds);
+			if (!car.isFullyCharged()) {
+				int maxK = TimeUtil.getTimeslotFromSeconds(car.getTimestampDeparture()) + 1;
+				scheduler.fillChargingPlanToMinSoC(state, currentK, maxK, car, chargingStation, state.currentTimeSeconds);
+				scheduler.fillChargingPlanByCost(state, currentK, maxK, car, chargingStation, state.currentTimeSeconds);
 			}
 			
 			// Always reoptimize for nonlinear processes (frees up more infrastructure capacity):
